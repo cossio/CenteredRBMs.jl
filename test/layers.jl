@@ -1,4 +1,4 @@
-import Test
+using Test: @test, @testset
 import RestrictedBoltzmannMachines as RBMs
 import CenteredRBMs
 
@@ -12,7 +12,7 @@ function energy_shift(offset::AbstractArray, x::AbstractArray)
     end
 end
 
-Test.@testset "shift_fields!" begin
+@testset "shift_fields!" begin
     N = (3, 4)
     layers = (
         RBMs.Binary(randn(N...)),

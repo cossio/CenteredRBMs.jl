@@ -1,56 +1,59 @@
-function RBMs.pcd!(
-    centered_rbm::CenteredRBM,
-    data::AbstractArray;
+"""
+    pcd!(rbm, data)
+
+Trains the RBM on data using Persistent Contrastive divergence.
+"""
+function pcd!(rbm::CenteredRBM, data::AbstractArray;
     batchsize::Int = 1,
     epochs::Int = 1,
-    optimizer = Flux.ADAM(),
-    history::ValueHistories.MVHistory = ValueHistories.MVHistory(),
+    optim = Flux.ADAM(),
+    history::MVHistory = MVHistory(),
     wts = nothing,
     steps::Int = 1,
-    vm::AbstractArray = RBMs.transfer_sample(centered_rbm.visible, falses(size(centered_rbm.visible)..., batchsize)),
-    center_h::Bool = true,
-    center_v::Bool = true,
-    damping::Real = 0.01,
+    vm = transfer_sample(visible(rbm), falses(size(visible(rbm))..., batchsize)),
+    stats = suffstats(visible(rbm), data; wts),
+    hidden_offset_damping::Real = 0.01
 )
-    @assert size(data) == (size(centered_rbm.visible)..., size(data)[end])
+    @assert size(data) == (size(rbm.visible)..., size(data)[end])
     @assert isnothing(wts) || _nobs(data) == _nobs(wts)
-
-    @assert 0 ≤ damping ≤ 1
-    center_v && center_visible_from_data!(centered_rbm, data)
-    center_h && center_hidden_from_data!(centered_rbm, data)
-
-    stats = RBMs.sufficient_statistics(centered_rbm.visible, data; wts)
-
+    center_from_data!(rbm, data)
     for epoch in 1:epochs
-        batches = RBMs.minibatches(data, wts; batchsize = batchsize)
+        batches = minibatches(data, wts; batchsize = batchsize)
         Δt = @elapsed for (vd, wd) in batches
             # update fantasy chains
-            vm .= RBMs.sample_v_from_v(centered_rbm, vm; steps = steps)
-            # update offsets
-            if center_h
-                hd = RBMs.mean_h_from_v(centered_rbm, vd)
-                offset_h_new = RBMs.batchmean(centered_rbm.hidden, hd; wts=wd)
-                offset_h_damped = damping * centered_rbm.offset_h + (1 - damping) * offset_h_new
-                center_hidden!(centered_rbm, offset_h_damped)
-            end
-            # compute contrastive divergence gradient
-            ∂ = RBMs.∂contrastive_divergence(centered_rbm, vd, vm; wd, stats)
-            # update parameters using gradient
-            RBMs.update!(optimizer, centered_rbm, ∂)
-            # store gradient norms
-            push!(history, :∂, RBMs.gradnorms(∂))
+            vm .= sample_v_from_v(rbm, vm; steps = steps)
+            # get gradient, and center! the rbm exploiting moment data in gradients
+            ∂ = ∂contrastive_divergence_and_center!(rbm, vd, vm; wd, stats, hidden_offset_damping)
+            # save gradient norms
+            push!(history, :∂, gradnorms(∂))
+            # update parameters
+            update!(rbm, update!(∂, rbm, optim))
+            # save parameter update steps
+            push!(history, :Δ, gradnorms(∂))
         end
-
-        lpl = RBMs.wmean(RBMs.log_pseudolikelihood(uncenter(centered_rbm), data); wts)
-        push!(history, :lpl, lpl)
         push!(history, :epoch, epoch)
         push!(history, :Δt, Δt)
         push!(history, :vm, copy(vm))
-
-        Δt_ = round(Δt, digits=2)
-        lpl_ = round(lpl, digits=2)
-        @debug "epoch $epoch/$epochs ($(Δt_)s), log(PL)=$lpl_"
+        @debug "epoch $epoch/$epochs ($(round(Δt, digits=2))s)"
     end
-
     return history
 end
+
+function ∂contrastive_divergence_and_center!(
+    rbm::CenteredRBM, vd::AbstractArray, vm::AbstractArray;
+    wd = nothing, wm = nothing,
+    stats = RBMs.suffstats(rbm.visible, vd; wts = wd),
+    hidden_offset_damping::Real = 0.01
+)
+    ∂d = RBMs.∂free_energy(rbm, vd; wts = wd, stats)
+    ∂m = RBMs.∂free_energy(rbm, vm; wts = wm)
+    ∂ = RBMs.subtract_gradients(∂d, ∂m)
+    # extract moment estimates from the gradients
+    offset_h_new = grad2mean(hidden(hidden), ∂d.hidden)  # <h>_d from minibatch
+    # since <h>_d uses minibatches, we keep a running average
+    offset_h = hidden_offset_damping * rbm.offset_h + (1 - hidden_offset_damping) * offset_h_new
+    center_hidden!(rbm, offset_h)
+    return ∂
+end
+
+RBMs.update!(rbm::CenteredRBM, ∂::NamedTuple, optim) = RBMs.update!(RBM(rbm), ∂, optim)

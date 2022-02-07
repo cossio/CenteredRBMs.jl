@@ -38,19 +38,15 @@ To construct a `CenteredRBM` that simply includes these offsets,
 call `CenteredRBM(rbm, offset_v, offset_h)` instead.
 """
 function center(rbm::RBM, offset_v::AbstractArray, offset_h::AbstractArray)
-    @assert size(rbm.visible) == size(offset_v)
-    @assert size(rbm.hidden) == size(offset_h)
     centered_rbm = center(rbm)
     return center(centered_rbm, offset_v, offset_h)
 end
 
-function center(centered_rbm::CenteredRBM, offset_v::AbstractArray, offset_h::AbstractArray)
-    @assert size(centered_rbm.visible) == size(offset_v)
-    @assert size(centered_rbm.hidden) == size(offset_h)
-    return center!(deepcopy(centered_rbm), offset_v, offset_h)
+function center(rbm::CenteredRBM, offset_v::AbstractArray, offset_h::AbstractArray)
+    center!(deepcopy(rbm), offset_v, offset_h)
 end
 
-center(centered_rbm::CenteredRBM) = center!(deepcopy(centered_rbm))
+center(rbm::CenteredRBM) = center!(deepcopy(rbm))
 center(rbm::RBM) = CenteredRBM(rbm)
 
 """
@@ -59,52 +55,50 @@ center(rbm::RBM) = CenteredRBM(rbm)
 Transforms the offsets of `centered_rbm`. The transformed model is equivalent to
 the original one (energies differ by a constant).
 """
-function center!(centered_rbm::CenteredRBM, offset_v::AbstractArray, offset_h::AbstractArray)
-    @assert size(centered_rbm.visible) == size(offset_v)
-    @assert size(centered_rbm.hidden) == size(offset_h)
-    center_visible!(centered_rbm, offset_v)
-    center_hidden!(centered_rbm, offset_h)
-    return centered_rbm
+function center!(rbm::CenteredRBM, offset_v::AbstractArray, offset_h::AbstractArray)
+    center_visible!(rbm, offset_v)
+    center_hidden!(rbm, offset_h)
+    return rbm
 end
 
-function center!(centered_rbm::CenteredRBM)
-    offset_v = FillArrays.Zeros(size(centered_rbm.visible))
-    offset_h = FillArrays.Zeros(size(centered_rbm.hidden))
-    center!(centered_rbm, offset_v, offset_h)
-    return centered_rbm
+function center!(rbm::CenteredRBM)
+    offset_v = FillArrays.Falses(size(visible(rbm)))
+    offset_h = FillArrays.Falses(size(hidden(rbm)))
+    center!(rbm, offset_v, offset_h)
+    return rbm
 end
 
-function center_visible!(centered_rbm::CenteredRBM, offset_v::AbstractArray)
-    @assert size(centered_rbm.visible) == size(offset_v)
-    inputs = RBMs.inputs_v_to_h(centered_rbm, offset_v)
-    shift_fields!(centered_rbm.hidden, inputs)
-    centered_rbm.offset_v .= offset_v
-    return centered_rbm
+function center_visible!(rbm::CenteredRBM, offset_v::AbstractArray)
+    @assert size(offset_v) == size(visible(rbm))
+    inputs = RBMs.inputs_v_to_h(rbm, offset_v)
+    shift_fields!(hidden(rbm), inputs)
+    rbm.offset_v .= offset_v
+    return rbm
 end
 
-function center_hidden!(centered_rbm::CenteredRBM, offset_h::AbstractArray)
-    @assert size(centered_rbm.hidden) == size(offset_h)
-    inputs = RBMs.inputs_h_to_v(centered_rbm, offset_h)
-    shift_fields!(centered_rbm.visible, inputs)
-    centered_rbm.offset_h .= offset_h
-    return centered_rbm
+function center_hidden!(rbm::CenteredRBM, offset_h::AbstractArray)
+    @assert size(offset_h) == size(hidden(rbm))
+    inputs = RBMs.inputs_h_to_v(rbm, offset_h)
+    shift_fields!(visible(rbm), inputs)
+    rbm.offset_h .= offset_h
+    return rbm
 end
 
-function center_visible_from_data!(centered_rbm::CenteredRBM, data::AbstractArray; wts=nothing)
-    offset_v = RBMs.batchmean(centered_rbm.visible, data; wts)
-    center_visible!(centered_rbm, offset_v)
-    return centered_rbm
+function center_visible_from_data!(rbm::CenteredRBM, data::AbstractArray; wts=nothing)
+    offset_v = RBMs.batchmean(visible(rbm), data; wts)
+    center_visible!(rbm, offset_v)
+    return rbm
 end
 
-function center_hidden_from_data!(centered_rbm::CenteredRBM, data::AbstractArray; wts=nothing)
-    h = RBMs.mean_h_from_v(centered_rbm, data)
-    offset_h = RBMs.batchmean(centered_rbm.hidden, h; wts)
-    center_hidden!(centered_rbm, offset_h)
-    return centered_rbm
+function center_hidden_from_data!(rbm::CenteredRBM, data::AbstractArray; wts=nothing)
+    h = RBMs.mean_h_from_v(rbm, data)
+    offset_h = RBMs.batchmean(hidden(rbm), h; wts)
+    center_hidden!(rbm, offset_h)
+    return rbm
 end
 
-function center_from_data!(centered_rbm::CenteredRBM, data::AbstractArray)
-    center_visible_from_data!(centered_rbm, data)
-    center_hidden_from_data!(centered_rbm, data)
-    return centered_rbm
+function center_from_data!(rbm::CenteredRBM, data::AbstractArray)
+    center_visible_from_data!(rbm, data)
+    center_hidden_from_data!(rbm, data)
+    return rbm
 end
