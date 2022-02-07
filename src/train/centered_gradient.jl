@@ -27,7 +27,6 @@ function pcdc!(rbm::RBM, data::AbstractArray;
     # initialize fantasy chains by sampling visible layer
     vm = RBMs.transfer_sample(rbm.visible, falses(size(rbm.visible)..., batchsize))
 
-
     for epoch in 1:epochs
         batches = minibatches(data, wts; batchsize = batchsize)
         Δt = @elapsed for (vd, wd) in batches

@@ -1,7 +1,5 @@
-struct CenteredRBM{V,H,W,Ov,Oh} <: AbstractRBM{V,H,W}
-    visible::V
-    hidden::H
-    w::W
+struct CenteredRBM{M,Ov,Oh}
+    rbm::M
     offset_v::Ov
     offset_h::Oh
     """
@@ -12,14 +10,10 @@ struct CenteredRBM{V,H,W,Ov,Oh} <: AbstractRBM{V,H,W}
     The resulting model is *not* equivalent to the original `rbm`
     (unless offset_v = 0 and offset_h = 0).
     """
-    function CenteredRBM(
-        rbm::AbstractRBM{V,H,W}, offset_v::AbstractArray, offset_h::AbstractArray
-    ) where {V,H,W}
+    function CenteredRBM(rbm::RBM, offset_v::AbstractArray, offset_h::AbstractArray)
         @assert size(visible(rbm)) == size(offset_v)
         @assert size(hidden(rbm)) == size(offset_h)
-        return new{V,H,W,typeof(offset_v),typeof(offset_h)}(
-            visible(rbm), hidden(rbm), weights(rbm), offset_v, offset_h
-        )
+        return new{typeof(rbm),typeof(offset_v),typeof(offset_h)}(rbm, offset_v, offset_h)
     end
 end
 
@@ -43,9 +37,9 @@ end
 
 CenteredRBM(rbm::RBM) = CenteredRBM(visible(rbm), hidden(rbm), weights(rbm))
 
-RBMs.visible(rbm::CenteredRBM) = rbm.visible
-RBMs.hidden(rbm::CenteredRBM) = rbm.hidden
-RBMs.weights(rbm::CenteredRBM) = rbm.w
+RBMs.visible(rbm::CenteredRBM) = visible(RBM(rbm))
+RBMs.hidden(rbm::CenteredRBM) = hidden(RBM(rbm))
+RBMs.weights(rbm::CenteredRBM) = weights(RBM(rbm))
 visible_offset(rbm::CenteredRBM) = rbm.offset_v
 hidden_offset(rbm::CenteredRBM) = rbm.offset_h
 
@@ -56,8 +50,16 @@ Returns an (uncentered) `RBM` which neglects the offsets of `centered_rbm`.
 The resulting model is *not* equivalent to the original `centered_rbm`.
 To construct an equivalent model, use the function
 `uncenter(centered_rbm)` instead (see [`uncenter`](@ref)).
+Shares parameters with `centered_rbm`.
 """
-RBMs.RBM(rbm::CenteredRBM) = RBM(visible(rbm), hidden(rbm), weights(rbm))
+RBMs.RBM(rbm::CenteredRBM) = rbm.rbm
+
+function RBMs.energy(rbm::CenteredRBM, v::AbstractArray, h::AbstractArray)
+    Ev = RBMs.energy(visible(rbm), v)
+    Eh = RBMs.energy(hidden(rbm), h)
+    Ew = RBMs.interaction_energy(rbm, v, h)
+    return Ev .+ Eh .+ Ew
+end
 
 function RBMs.interaction_energy(centered_rbm::CenteredRBM, v::AbstractArray, h::AbstractArray)
     centered_v = v .- visible_offset(centered_rbm)
@@ -83,8 +85,26 @@ function RBMs.free_energy(rbm::CenteredRBM, v::AbstractArray; β::Real = true)
     return E + F - ΔE
 end
 
-function RBMs.mirror(rbm::CenteredRBM)
-    return CenteredRBM(mirror(RBM(rbm)), hidden_offset(rbm), visible_offset(rbm))
+function RBMs.mean_h_from_v(rbm::CenteredRBM, v::AbstractArray; β::Real=1)
+    inputs = RBMs.inputs_v_to_h(rbm, v)
+    return RBMs.transfer_mean(hidden(rbm), inputs; β)
+end
+
+function RBMs.mean_v_from_h(rbm::CenteredRBM, h::AbstractArray; β::Real = true)
+    inputs = RBMs.inputs_h_to_v(rbm, h)
+    return RBMs.transfer_mean(visible(rbm), inputs; β)
+end
+
+function RBMs.∂free_energy(
+    rbm::CenteredRBM, v::AbstractArray;
+    wts = nothing, stats = RBMs.suffstats(visible(rbm), v; wts)
+)
+    inputs = RBMs.inputs_v_to_h(rbm, v)
+    h = RBMs.transfer_mean(hidden(rbm), inputs)
+    ∂v = RBMs.∂energy(visible(rbm), stats)
+    ∂h = RBMs.∂free_energy(hidden(rbm), inputs; wts)
+    ∂w = RBMs.∂interaction_energy(rbm, v, h; wts)
+    return (visible = ∂v, hidden = ∂h, w = ∂w)
 end
 
 function RBMs.∂interaction_energy(
@@ -94,4 +114,8 @@ function RBMs.∂interaction_energy(
     centered_h = h .- hidden_offset(rbm)
     ∂w = RBMs.∂interaction_energy(RBM(rbm), centered_v, centered_h; wts)
     return ∂w
+end
+
+function RBMs.log_pseudolikelihood(rbm::CenteredRBM, v::AbstractArray; β::Real=1)
+    return RBMs.log_pseudolikelihood(uncenter(rbm), v; β)
 end

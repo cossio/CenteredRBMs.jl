@@ -5,12 +5,14 @@ We begin by importing the required packages.
 We load MNIST via the MLDatasets.jl package.
 =#
 
+import Makie
 import CairoMakie
 using Random: bitrand
 using Statistics: mean
 import MLDatasets
 import Flux
 import RestrictedBoltzmannMachines as RBMs
+using ValueHistories: MVHistory
 import CenteredRBMs
 using RestrictedBoltzmannMachines: BinaryRBM
 nothing #hide
@@ -32,7 +34,7 @@ function imggrid(A::AbstractArray{<:Any,4})
 end
 
 #=
-Now load the dataset.
+Load the dataset.
 =#
 
 Float = Float32
@@ -43,45 +45,66 @@ nothing #hide
 
 #=
 Initialize and train a centered RBM
-Notice how we pass the `Float` type, to set the parameter type of the layers and weights
-in the RBM.
 =#
 
-rbm = CenteredRBMs.center(BinaryRBM(Float, (28,28), 400))
-RBMs.initialize!(rbm, train_x) # centers from data
+rbm_c = CenteredRBMs.center(BinaryRBM(Float, (28,28), 400))
+RBMs.initialize!(rbm_c, train_x) # centers from data
 batchsize = 256
 optim = Flux.ADAM()
 vm = bitrand(28, 28, batchsize) # fantasy chains
-history = MVHistory()
-push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
-@time for epoch in 1:100
-    RBMs.pcd!(rbm, train_x; epochs=5, vm, history, batchsize, optim)
-    # track pseudolikelihood every 5 epochs
-    push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
+history_c = MVHistory()
+push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
+@time for epoch in 1:100 # track pseudolikelihood every 5 epochs
+    RBMs.pcd!(rbm_c, train_x; epochs=5, vm, history=history_c, batchsize, optim)
+    push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
 end
-rbm = CenteredRBMs.uncenter(centered_rbm)
+rbm_c = CenteredRBMs.uncenter(rbm_c) # equivalent RBM without offsets
 nothing #hide
 
 #=
-Plot of log-pseudolikelihood during learning.
-Note that this shows the pseudolikelihood of the train data.
+For comparison, we also train a normal RBM.
 =#
 
-CairoMakie.lines(get(history, :lpl)...)
+rbm = BinaryRBM(Float, (28,28), 400)
+RBMs.initialize!(rbm, train_x)
+vm = bitrand(28, 28, batchsize)
+history = MVHistory()
+push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
+@time for epoch in 1:100 # track pseudolikelihood every 5 epochs
+    RBMs.pcd!(rbm, train_x; epochs=5, vm, history, batchsize, optim)
+    push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
+end
+nothing #hide
 
 #=
-Now we do the Gibbs sampling to generate the RBM digits.
+Plot log-pseudolikelihood of train data during learning.
 =#
 
-@elapsed fantasy_x .= RBMs.sample_v_from_v(rbm, bitrand(28,27,nrows*ncols); steps=10000)
+fig = Makie.Figure(resolution=(600, 400))
+ax = Makie.Axis(fig[1,1], xlabel="training time", ylabel="pseudolikelihood")
+Makie.lines!(ax, get(history, :lpl)..., label="normal")
+Makie.lines!(ax, get(history_c, :lpl)..., label="centered")
+Makie.axislegend(ax, position=:rt)
+fig
+
+#=
+Now we do the Gibbs sampling to generate RBM digits.
+=#
+
+nrows, ncols = 10, 15
+@time fantasy_x_c = RBMs.sample_v_from_v(rbm_c, bitrand(28,28,nrows*ncols); steps=10000)
+@time fantasy_x = RBMs.sample_v_from_v(rbm, bitrand(28,28,nrows*ncols); steps=10000)
+nothing #hide
 
 #=
 Plot the resulting samples.
 =#
 
-fig = CairoMakie.Figure(resolution=(40ncols, 40nrows))
+fig = CairoMakie.Figure(resolution=(40ncols, 2*40nrows))
 ax = CairoMakie.Axis(fig[1,1], yreversed=true)
 CairoMakie.image!(ax, imggrid(reshape(fantasy_x, 28, 28, ncols, nrows)), colorrange=(1,0))
+ax = CairoMakie.Axis(fig[2,1], yreversed=true)
+CairoMakie.image!(ax, imggrid(reshape(fantasy_x_c, 28, 28, ncols, nrows)), colorrange=(1,0))
 CairoMakie.hidedecorations!(ax)
 CairoMakie.hidespines!(ax)
 fig
