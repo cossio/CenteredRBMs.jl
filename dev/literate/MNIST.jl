@@ -83,13 +83,14 @@ ax = Makie.Axis(fig[1,1], xlabel="epochs", ylabel="pseudolikelihood")
 Makie.lines!(ax, get(history_u, :lpl)..., label="normal")
 Makie.lines!(ax, get(history_c, :lpl)..., label="centered")
 Makie.axislegend(ax, position=:rb)
+fig
 
 # Seconds per epoch.
 
 fig = Makie.Figure(resolution=(600, 300))
-ax = Makie.Axis(fig[1,1], xlabel="epochs", ylabel="cum. seconds")
-Makie.lines!(ax, get(history_u, :Δt)[1], cumsum(get(history_u, :Δt)[2]), label="normal")
-Makie.lines!(ax, get(history_c, :Δt)[1], cumsum(get(history_c, :Δt)[2]), label="centered")
+ax = Makie.Axis(fig[1,1], xlabel="epoch", ylabel="seconds")
+Makie.lines!(ax, get(history_u, :Δt)..., label="normal")
+Makie.lines!(ax, get(history_c, :Δt)..., label="centered")
 Makie.axislegend(ax, position=:rb)
 fig
 
@@ -113,6 +114,7 @@ nothing #hide
 
 # Normal RBM.
 
+fig = Makie.Figure(resolution=(40ncols, 40nrows))
 ax = Makie.Axis(fig[1,1], yreversed=true)
 Makie.image!(ax, imggrid(reshape(fantasy_x_u, 28, 28, ncols, nrows)), colorrange=(1,0))
 Makie.hidedecorations!(ax)
