@@ -41,7 +41,7 @@ Float = Float32
 selected_digits = (0, 1) # only work with these digits for speed
 train_x, train_y = MLDatasets.MNIST.traindata()
 train_x = Array{Float}(train_x[:, :, train_y .∈ Ref(selected_digits)] .> 0.5)
-nothing #hide
+size(train_x, 3) # number of train samples
 
 #=
 Initialize and train a centered RBM
@@ -76,35 +76,54 @@ push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
 end
 nothing #hide
 
-#=
-Plot log-pseudolikelihood of train data during learning.
-=#
+# Plot log-pseudolikelihood of train data during learning.
 
-fig = Makie.Figure(resolution=(600, 400))
-ax = Makie.Axis(fig[1,1], xlabel="training time", ylabel="pseudolikelihood")
+fig = Makie.Figure(resolution=(600, 300))
+ax = Makie.Axis(fig[1,1], xlabel="epochs", ylabel="pseudolikelihood")
 Makie.lines!(ax, get(history, :lpl)..., label="normal")
 Makie.lines!(ax, get(history_c, :lpl)..., label="centered")
-Makie.axislegend(ax, position=:rt)
+Makie.axislegend(ax, position=:rb)
+
+# Seconds per epoch.
+
+fig = Makie.Figure(resolution=(600, 300))
+ax = Makie.Axis(fig[1,1], xlabel="epochs", ylabel="seconds")
+Makie.lines!(ax, get(history, :Δt)..., label="normal")
+Makie.lines!(ax, get(history_c, :Δt)..., label="centered")
+Makie.axislegend(ax, position=:rb)
 fig
 
-#=
-Now we do the Gibbs sampling to generate RBM digits.
-=#
+# Log-pseudolikelihood vs. computation time instead of epoch count.
+
+fig = Makie.Figure(resolution=(600, 300))
+ax = Makie.Axis(fig[1,1], xlabel="seconds", ylabel="pseudolikelihood")
+Makie.lines!(ax, cumsum(get(history, :Δt)[2]), get(history, :lpl)[2], label="normal")
+Makie.lines!(ax, cumsum(get(history_c, :Δt)[2]), get(history_c, :lpl)[2], label="centered")
+Makie.axislegend(ax, position=:rb)
+fig
+
+# Now we do the Gibbs sampling to generate RBM digits.
 
 nrows, ncols = 10, 15
 @time fantasy_x_c = RBMs.sample_v_from_v(rbm_c, bitrand(28,28,nrows*ncols); steps=10000)
 @time fantasy_x = RBMs.sample_v_from_v(rbm, bitrand(28,28,nrows*ncols); steps=10000)
 nothing #hide
 
-#=
-Plot the resulting samples.
-=#
+# Plot the resulting samples.
 
-fig = CairoMakie.Figure(resolution=(40ncols, 2*40nrows))
-ax = CairoMakie.Axis(fig[1,1], yreversed=true)
-CairoMakie.image!(ax, imggrid(reshape(fantasy_x, 28, 28, ncols, nrows)), colorrange=(1,0))
-ax = CairoMakie.Axis(fig[2,1], yreversed=true)
-CairoMakie.image!(ax, imggrid(reshape(fantasy_x_c, 28, 28, ncols, nrows)), colorrange=(1,0))
-CairoMakie.hidedecorations!(ax)
-CairoMakie.hidespines!(ax)
+# Normal RBM.
+
+ax = Makie.Axis(fig[1,1], yreversed=true)
+Makie.image!(ax, imggrid(reshape(fantasy_x, 28, 28, ncols, nrows)), colorrange=(1,0))
+Makie.hidedecorations!(ax)
+Makie.hidespines!(ax)
+fig
+
+# Centered RBM.
+
+fig = Makie.Figure(resolution=(40ncols, 40nrows))
+ax = Makie.Axis(fig[1,1], yreversed=true)
+Makie.image!(ax, imggrid(reshape(fantasy_x_c, 28, 28, ncols, nrows)), colorrange=(1,0))
+Makie.hidedecorations!(ax)
+Makie.hidespines!(ax)
 fig
