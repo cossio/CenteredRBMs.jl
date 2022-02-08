@@ -34,14 +34,14 @@ function imggrid(A::AbstractArray{<:Any,4})
 end
 
 #=
-Load the dataset.
+Load the MNIST dataset. We only work with 0s and 1s for speed.
 =#
 
 Float = Float32
-selected_digits = (0, 1) # only work with these digits for speed
 train_x, train_y = MLDatasets.MNIST.traindata()
-train_x = Array{Float}(train_x[:, :, train_y .∈ Ref(selected_digits)] .> 0.5)
-size(train_x, 3) # number of train samples
+train_x = Array{Float}(train_x[:, :, train_y .∈ Ref((0,1))] .> 0.5)
+println(size(train_x, 3), " train samples, with ", count(train_y .== 0), " zeros and ", count(train_y .== 1), " ones.")
+nothing #hide
 
 #=
 Initialize and train a centered RBM
@@ -58,7 +58,7 @@ push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
     RBMs.pcd!(rbm_c, train_x; epochs=5, vm, history=history_c, batchsize, optim)
     push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
 end
-rbm_c = CenteredRBMs.uncenter(rbm_c) # equivalent RBM without offsets
+rbm_c = CenteredRBMs.uncenter(rbm_c) # convert to equivalent RBM (without offsets)
 nothing #hide
 
 #=
