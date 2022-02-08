@@ -91,7 +91,7 @@ fig = Makie.Figure(resolution=(600, 300))
 ax = Makie.Axis(fig[1,1], xlabel="epoch", ylabel="seconds")
 Makie.lines!(ax, get(history_u, :Δt)..., label="normal")
 Makie.lines!(ax, get(history_c, :Δt)..., label="centered")
-Makie.axislegend(ax, position=:rb)
+Makie.axislegend(ax, position=:rt)
 fig
 
 # Log-pseudolikelihood vs. computation time instead of epoch count.
