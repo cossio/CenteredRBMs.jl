@@ -34,14 +34,14 @@ function imggrid(A::AbstractArray{<:Any,4})
 end
 
 #=
-Load the dataset.
+Load the MNIST dataset. We only work with 0s and 1s for speed.
 =#
 
 Float = Float32
-selected_digits = (0, 1) # only work with these digits for speed
 train_x, train_y = MLDatasets.MNIST.traindata()
-train_x = Array{Float}(train_x[:, :, train_y .∈ Ref(selected_digits)] .> 0.5)
-size(train_x, 3) # number of train samples
+train_x = Array{Float}(train_x[:, :, train_y .∈ Ref((0,1))] .> 0.5)
+println(size(train_x, 3), " train samples, with ", count(train_y .== 0), " zeros and ", count(train_y .== 1), " ones.")
+nothing #hide
 
 #=
 Initialize and train a centered RBM
@@ -58,21 +58,21 @@ push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
     RBMs.pcd!(rbm_c, train_x; epochs=5, vm, history=history_c, batchsize, optim)
     push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
 end
-rbm_c = CenteredRBMs.uncenter(rbm_c) # equivalent RBM without offsets
+rbm_c = CenteredRBMs.uncenter(rbm_c) # convert to equivalent RBM (without offsets)
 nothing #hide
 
 #=
-For comparison, we also train a normal RBM.
+For comparison, we also train a normal (uncentered) RBM.
 =#
 
-rbm = BinaryRBM(Float, (28,28), 400)
-RBMs.initialize!(rbm, train_x)
+rbm_u = BinaryRBM(Float, (28,28), 400)
+RBMs.initialize!(rbm_u, train_x)
 vm = bitrand(28, 28, batchsize)
-history = MVHistory()
-push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
+history_u = MVHistory()
+push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
 @time for epoch in 1:100 # track pseudolikelihood every 5 epochs
-    RBMs.pcd!(rbm, train_x; epochs=5, vm, history, batchsize, optim)
-    push!(history, :lpl, mean(RBMs.log_pseudolikelihood(rbm, train_x)))
+    RBMs.pcd!(rbm_u, train_x; epochs=5, vm, history=history_u, batchsize, optim)
+    push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
 end
 nothing #hide
 
@@ -80,25 +80,26 @@ nothing #hide
 
 fig = Makie.Figure(resolution=(600, 300))
 ax = Makie.Axis(fig[1,1], xlabel="epochs", ylabel="pseudolikelihood")
-Makie.lines!(ax, get(history, :lpl)..., label="normal")
+Makie.lines!(ax, get(history_u, :lpl)..., label="normal")
 Makie.lines!(ax, get(history_c, :lpl)..., label="centered")
 Makie.axislegend(ax, position=:rb)
+fig
 
 # Seconds per epoch.
 
 fig = Makie.Figure(resolution=(600, 300))
-ax = Makie.Axis(fig[1,1], xlabel="epochs", ylabel="seconds")
-Makie.lines!(ax, get(history, :Δt)..., label="normal")
+ax = Makie.Axis(fig[1,1], xlabel="epoch", ylabel="seconds")
+Makie.lines!(ax, get(history_u, :Δt)..., label="normal")
 Makie.lines!(ax, get(history_c, :Δt)..., label="centered")
-Makie.axislegend(ax, position=:rb)
+Makie.axislegend(ax, position=:rt)
 fig
 
 # Log-pseudolikelihood vs. computation time instead of epoch count.
 
 fig = Makie.Figure(resolution=(600, 300))
 ax = Makie.Axis(fig[1,1], xlabel="seconds", ylabel="pseudolikelihood")
-Makie.lines!(ax, cumsum(get(history, :Δt)[2]), get(history, :lpl)[2], label="normal")
-Makie.lines!(ax, cumsum(get(history_c, :Δt)[2]), get(history_c, :lpl)[2], label="centered")
+Makie.lines!(ax, cumsum([0; get(history_u, :Δt)[2]])[1:5:end], get(history_u, :lpl)[2], label="normal")
+Makie.lines!(ax, cumsum([0; get(history_c, :Δt)[2]])[1:5:end], get(history_c, :lpl)[2], label="centered")
 Makie.axislegend(ax, position=:rb)
 fig
 
@@ -106,15 +107,16 @@ fig
 
 nrows, ncols = 10, 15
 @time fantasy_x_c = RBMs.sample_v_from_v(rbm_c, bitrand(28,28,nrows*ncols); steps=10000)
-@time fantasy_x = RBMs.sample_v_from_v(rbm, bitrand(28,28,nrows*ncols); steps=10000)
+@time fantasy_x_u = RBMs.sample_v_from_v(rbm_u, bitrand(28,28,nrows*ncols); steps=10000)
 nothing #hide
 
 # Plot the resulting samples.
 
 # Normal RBM.
 
+fig = Makie.Figure(resolution=(40ncols, 40nrows))
 ax = Makie.Axis(fig[1,1], yreversed=true)
-Makie.image!(ax, imggrid(reshape(fantasy_x, 28, 28, ncols, nrows)), colorrange=(1,0))
+Makie.image!(ax, imggrid(reshape(fantasy_x_u, 28, 28, ncols, nrows)), colorrange=(1,0))
 Makie.hidedecorations!(ax)
 Makie.hidespines!(ax)
 fig
