@@ -53,5 +53,9 @@ function ∂contrastive_divergence_and_center!(
     return ∂
 end
 
-RBMs.update!(rbm::CenteredRBM, ∂::NamedTuple) = RBMs.update!(RBM(rbm), ∂)
+function RBMs.update!(rbm::CenteredRBM, ∂::NamedTuple)
+    RBMs.update!(RBM(rbm), ∂)
+    return rbm
+end
+
 RBMs.update!(∂::NamedTuple, rbm::CenteredRBM, optim) = RBMs.update!(∂, RBM(rbm), optim)
