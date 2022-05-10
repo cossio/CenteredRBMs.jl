@@ -54,9 +54,11 @@ optim = Flux.ADAM()
 vm = bitrand(28, 28, batchsize) # fantasy chains
 history_c = MVHistory()
 push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
+push!(history_c, :Δt, 0.0)
 @time for epoch in 1:100 # track pseudolikelihood every 5 epochs
-    RBMs.pcd!(rbm_c, train_x; epochs=5, vm, history=history_c, batchsize, optim)
+    Δt = @elapsed RBMs.pcd!(rbm_c, train_x; epochs=5, vm, batchsize, optim)
     push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
+    push!(history_c, :Δt, Δt)
 end
 rbm_c = CenteredRBMs.uncenter(rbm_c) # convert to equivalent RBM (without offsets)
 nothing #hide
@@ -70,9 +72,11 @@ RBMs.initialize!(rbm_u, train_x)
 vm = bitrand(28, 28, batchsize)
 history_u = MVHistory()
 push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
+push!(history_u, :Δt, 0.0)
 @time for epoch in 1:100 # track pseudolikelihood every 5 epochs
-    RBMs.pcd!(rbm_u, train_x; epochs=5, vm, history=history_u, batchsize, optim)
+    Δt = @elapsed RBMs.pcd!(rbm_u, train_x; epochs=5, vm, batchsize, optim)
     push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
+    push!(history_u, :Δt, Δt)
 end
 nothing #hide
 
@@ -98,8 +102,8 @@ fig
 
 fig = Makie.Figure(resolution=(600, 300))
 ax = Makie.Axis(fig[1,1], xlabel="seconds", ylabel="pseudolikelihood")
-Makie.lines!(ax, cumsum([0; get(history_u, :Δt)[2]])[1:5:end], get(history_u, :lpl)[2], label="normal")
-Makie.lines!(ax, cumsum([0; get(history_c, :Δt)[2]])[1:5:end], get(history_c, :lpl)[2], label="centered")
+Makie.lines!(ax, cumsum(get(history_u, :Δt)[2]), get(history_u, :lpl)[2], label="normal")
+Makie.lines!(ax, cumsum(get(history_c, :Δt)[2]), get(history_c, :lpl)[2], label="centered")
 Makie.axislegend(ax, position=:rb)
 fig
 
