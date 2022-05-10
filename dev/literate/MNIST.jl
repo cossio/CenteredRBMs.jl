@@ -74,7 +74,7 @@ history_u = MVHistory()
 push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
 push!(history_u, :Δt, 0.0)
 @time for epoch in 1:100 # track pseudolikelihood every 5 epochs
-    Δt = @elapsed RBMs.pcd!(rbm_u, train_x; epochs=5, vm, batchsize, optim)
+    Δt = @elapsed RBMs.pcd!(rbm_u, train_x; epochs=5, vm, batchsize, optim, center=false)
     push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
     push!(history_u, :Δt, Δt)
 end
