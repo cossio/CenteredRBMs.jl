@@ -62,37 +62,37 @@ function center!(rbm::CenteredRBM, offset_v::AbstractArray, offset_h::AbstractAr
 end
 
 function center!(rbm::CenteredRBM)
-    offset_v = FillArrays.Falses(size(visible(rbm)))
-    offset_h = FillArrays.Falses(size(hidden(rbm)))
+    offset_v = FillArrays.Falses(size(rbm.visible))
+    offset_h = FillArrays.Falses(size(rbm.hidden))
     center!(rbm, offset_v, offset_h)
     return rbm
 end
 
 function center_visible!(rbm::CenteredRBM, offset_v::AbstractArray)
-    @assert size(offset_v) == size(visible(rbm))
+    @assert size(offset_v) == size(rbm.visible)
     inputs = RBMs.inputs_v_to_h(rbm, offset_v)
-    shift_fields!(hidden(rbm), inputs)
+    shift_fields!(rbm.hidden, inputs)
     rbm.offset_v .= offset_v
     return rbm
 end
 
 function center_hidden!(rbm::CenteredRBM, offset_h::AbstractArray)
-    @assert size(offset_h) == size(hidden(rbm))
+    @assert size(offset_h) == size(rbm.hidden)
     inputs = RBMs.inputs_h_to_v(rbm, offset_h)
-    shift_fields!(visible(rbm), inputs)
+    shift_fields!(rbm.visible, inputs)
     rbm.offset_h .= offset_h
     return rbm
 end
 
 function center_visible_from_data!(rbm::CenteredRBM, data::AbstractArray; wts=nothing)
-    offset_v = RBMs.batchmean(visible(rbm), data; wts)
+    offset_v = RBMs.batchmean(rbm.visible, data; wts)
     center_visible!(rbm, offset_v)
     return rbm
 end
 
 function center_hidden_from_data!(rbm::CenteredRBM, data::AbstractArray; wts=nothing)
     h = RBMs.mean_h_from_v(rbm, data)
-    offset_h = RBMs.batchmean(hidden(rbm), h; wts)
+    offset_h = RBMs.batchmean(rbm.hidden, h; wts)
     center_hidden!(rbm, offset_h)
     return rbm
 end

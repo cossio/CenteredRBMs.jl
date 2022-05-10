@@ -1,11 +1,11 @@
-import Test
+using Test: @testset, @test, @inferred
 import Random
 import Statistics
 import Zygote
 import RestrictedBoltzmannMachines as RBMs
 import CenteredRBMs
 using CenteredRBMs: CenteredBinaryRBM, center, uncenter
-using RestrictedBoltzmannMachines: visible, hidden, weights
+using RestrictedBoltzmannMachines: visible, hidden, weights, RBM, Potts
 
 @testset "center / uncenter" begin
     rbm = RBMs.BinaryRBM(randn(3), randn(2), randn(3,2))

@@ -9,7 +9,7 @@ module CenteredRBMs
     import RestrictedBoltzmannMachines as RBMs
     using RestrictedBoltzmannMachines: RBM, AbstractLayer, visible, hidden, weights
     using RestrictedBoltzmannMachines: Binary, Spin, Potts, Gaussian, ReLU, dReLU, pReLU, xReLU
-    using RestrictedBoltzmannMachines:  gradnorms, update!, minibatches
+    using RestrictedBoltzmannMachines: gradnorms, update!, minibatches
 
     include("centered_rbm.jl")
     include("centering.jl")

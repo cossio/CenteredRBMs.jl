@@ -14,4 +14,3 @@ ValueHistories = "98cad3c8-aec3-5f06-8e41-884608649ab7"
 
 [compat]
 julia = "1.6"
-RestrictedBoltzmannMachines = "0.15"

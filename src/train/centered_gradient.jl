@@ -60,8 +60,8 @@ function ∂contrastive_divergence_centered(
     ∂ = RBMs.subtract_gradients(∂d, ∂m)
 
     # extract moment estimates from the gradients
-    λv = grad2mean(visible(rbm), ∂d.visible)   # <v>_d, uses full data from sufficient_statistics
-    λh = grad2mean(hidden(hidden), ∂d.hidden)  # <h>_d, uses minibatch
+    λv = grad2mean(rbm.visible, ∂d.visible)   # <v>_d, uses full data from sufficient_statistics
+    λh = grad2mean(rbm.hidden, ∂d.hidden)  # <h>_d, uses minibatch
 
     # since <h>_d uses minibatches, we keep a running average
     @assert size(avg_h) == size(λh)

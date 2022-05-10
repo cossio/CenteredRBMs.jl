@@ -11,36 +11,36 @@ using RestrictedBoltzmannMachines: RBM, Binary
 function centered_energy(
     rbm::RBM, v::AbstractArray, h::AbstractArray, λv::AbstractArray, λh::AbstractArray
 )
-    Ev = energy(visible(rbm), v)
-    Eh = energy(hidden(rbm), h)
+    Ev = energy(rbm.visible, v)
+    Eh = energy(rbm.hidden, h)
     return Ev .+ Eh .+ interaction_energy(rbm, v .- λv, h .- λh) .- interaction_energy(rbm, λv, λh)
 end
 
 function binary_center(rbm::RBM{<:Binary,<:Binary}, λv::AbstractArray, λh::AbstractArray)
-    RBMs.BinaryRBM(visible(rbm).θ + weights(rbm) * λh, hidden(rbm).θ + weights(rbm)' * λv, weights(rbm))
+    RBMs.BinaryRBM(rbm.visible.θ + rbm.w * λh, rbm.hidden.θ + rbm.w' * λv, rbm.w)
 end
 
 @testset "centering binary RBMs" begin
     rbm = RBMs.BinaryRBM(randn(4), randn(2), randn(4,2))
-    λv = randn(size(visible(rbm)))
-    λh = randn(size(hidden(rbm)))
+    λv = randn(size(rbm.visible))
+    λh = randn(size(rbm.hidden))
     rbmc = binary_center(rbm, λv, λh)
-    v = Random.bitrand(size(visible(rbm))...,3,2)
-    h = Random.bitrand(size(hidden(rbm))...,3,2)
+    v = Random.bitrand(size(rbm.visible)...,3,2)
+    h = Random.bitrand(size(rbm.hidden)...,3,2)
     @test RBMs.energy(rbm, v, h) ≈ centered_energy(rbmc, v, h, λv, λh)
-    @test visible(binary_center(rbmc, -λv, -λh)).θ ≈ visible(rbm).θ
-    @test hidden(binary_center(rbmc, -λv, -λh)).θ ≈ hidden(rbm).θ
-    @test weights(binary_center(rbmc, -λv, -λh)) ≈ weights(rbm)
-    @test visible(rbmc).θ ≈ visible(CenteredRBMs.center(rbm, λv, λh)).θ
-    @test hidden(rbmc).θ ≈ hidden(CenteredRBMs.center(rbm, λv, λh)).θ
-    @test weights(rbmc) ≈ weights(CenteredRBMs.center(rbm, λv, λh))
+    @test binary_center(rbmc, -λv, -λh).visible.θ ≈ rbm.visible.θ
+    @test binary_center(rbmc, -λv, -λh).hidden.θ ≈ rbm.hidden.θ
+    @test binary_center(rbmc, -λv, -λh).w ≈ rbm.w
+    @test rbmc.visible.θ ≈ CenteredRBMs.center(rbm, λv, λh).visible.θ
+    @test rbmc.hidden.θ ≈ CenteredRBMs.center(rbm, λv, λh).hidden.θ
+    @test rbmc.w ≈ CenteredRBMs.center(rbm, λv, λh).w
 
     ∂rbmc, = Zygote.gradient(rbmc -> sum(centered_energy(rbmc, v, h, λv, λh)), rbmc)
     ∂rbm, = Zygote.gradient(rbm -> sum(RBMs.energy(rbm, v, h)), rbm)
     ∂crbm = CenteredRBMs.center_gradients(rbm, ∂rbm, λv, λh)
 
-    for i in eachindex(visible(rbm).θ)
-        J = only(Zygote.gradient(rbmc -> visible(binary_center(rbmc, -λv, -λh)).θ[i], rbmc))
+    for i in eachindex(rbm.visible.θ)
+        J = only(Zygote.gradient(rbmc -> binary_center(rbmc, -λv, -λh).visible.θ[i], rbmc))
         @test ∂crbm.visible.θ[i] ≈ (
             (isnothing(J.visible) ? 0 : LinearAlgebra.dot(J.visible.θ, ∂rbmc.visible.θ)) +
             (isnothing(J.hidden) ? 0 : LinearAlgebra.dot(J.hidden.θ, ∂rbmc.hidden.θ)) +
@@ -48,8 +48,8 @@ end
         )
     end
 
-    for μ in eachindex(hidden(rbm).θ)
-        J = only(Zygote.gradient(rbmc -> hidden(binary_center(rbmc, -λv, -λh)).θ[μ], rbmc))
+    for μ in eachindex(rbm.hidden.θ)
+        J = only(Zygote.gradient(rbmc -> binary_center(rbmc, -λv, -λh).hidden.θ[μ], rbmc))
         @test ∂crbm.hidden.θ[μ] ≈ (
             (isnothing(J.visible) ? 0 : LinearAlgebra.dot(J.visible.θ, ∂rbmc.visible.θ)) +
             (isnothing(J.hidden) ? 0 : LinearAlgebra.dot(J.hidden.θ, ∂rbmc.hidden.θ)) +
@@ -57,8 +57,8 @@ end
         )
     end
 
-    for k in eachindex(weights(rbm))
-        J = only(Zygote.gradient(rbmc -> weights(binary_center(rbmc, -λv, -λh))[k], rbmc))
+    for k in eachindex(rbm.w)
+        J = only(Zygote.gradient(rbmc -> binary_center(rbmc, -λv, -λh).w[k], rbmc))
         @test ∂crbm.w[k] ≈ (
             (isnothing(J.visible) ? 0 : LinearAlgebra.dot(J.visible.θ, ∂rbmc.visible.θ)) +
             (isnothing(J.hidden) ? 0 : LinearAlgebra.dot(J.hidden.θ, ∂rbmc.hidden.θ)) +
@@ -92,5 +92,5 @@ end
     v = RBMs.sample_v_from_v(rbm, randn(5,100); steps=100)
     ∂ = RBMs.∂free_energy(rbm, v)
     applicable(CenteredRBMs.grad2mean, layer, ∂.visible) || continue
-    @test CenteredRBMs.grad2mean(visible(rbm), ∂.visible) ≈ dropdims(mean(v; dims=2); dims=2)
+    @test CenteredRBMs.grad2mean(rbm.visible, ∂.visible) ≈ dropdims(mean(v; dims=2); dims=2)
 end
