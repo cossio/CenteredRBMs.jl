@@ -1,11 +1,11 @@
 function RBMs.sample_h_from_v(rbm::CenteredRBM, v::AbstractArray)
     inputs = RBMs.inputs_v_to_h(rbm, v)
-    return RBMs.transfer_sample(rbm.hidden, inputs)
+    return RBMs.sample_from_inputs(rbm.hidden, inputs)
 end
 
 function RBMs.sample_v_from_h(rbm::CenteredRBM, h::AbstractArray)
     inputs = RBMs.inputs_h_to_v(rbm, h)
-    return RBMs.transfer_sample(rbm.visible, inputs)
+    return RBMs.sample_from_inputs(rbm.visible, inputs)
 end
 
 function RBMs.sample_v_from_v(rbm::CenteredRBM, v::AbstractArray; steps::Int = 1)

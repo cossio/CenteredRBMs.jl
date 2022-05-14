@@ -26,7 +26,7 @@ end
     )
     for layer in layers
         offset = randn(size(layer)...)
-        x = RBMs.transfer_sample(layer, randn(size(layer)..., 2, 3))
+        x = RBMs.sample_from_inputs(layer, randn(size(layer)..., 2, 3))
         layer_shifted = CenteredRBMs.shift_fields!(deepcopy(layer), offset)
         @test RBMs.energy(layer_shifted, x) ≈ RBMs.energy(layer, x) + energy_shift(offset, x)
     end

@@ -5,7 +5,7 @@ function RBMs.pcd!(rbm::CenteredRBM, data::AbstractArray;
     history::MVHistory = MVHistory(),
     wts = nothing,
     steps::Int = 1,
-    vm = RBMs.transfer_sample(rbm.visible, falses(size(rbm.visible)..., batchsize)),
+    vm = RBMs.sample_from_inputs(rbm.visible, falses(size(rbm.visible)..., batchsize)),
     stats = RBMs.suffstats(rbm.visible, data; wts),
     hidden_offset_damping::Real = 0.01
 )

@@ -84,12 +84,12 @@ end
 
 function RBMs.mean_h_from_v(rbm::CenteredRBM, v::AbstractArray)
     inputs = RBMs.inputs_v_to_h(rbm, v)
-    return RBMs.transfer_mean(rbm.hidden, inputs)
+    return RBMs.mean_from_inputs(rbm.hidden, inputs)
 end
 
 function RBMs.mean_v_from_h(rbm::CenteredRBM, h::AbstractArray)
     inputs = RBMs.inputs_h_to_v(rbm, h)
-    return RBMs.transfer_mean(rbm.visible, inputs)
+    return RBMs.mean_from_inputs(rbm.visible, inputs)
 end
 
 function RBMs.∂free_energy(
@@ -97,7 +97,7 @@ function RBMs.∂free_energy(
     wts = nothing, stats = RBMs.suffstats(rbm.visible, v; wts)
 )
     inputs = RBMs.inputs_v_to_h(rbm, v)
-    h = RBMs.transfer_mean(rbm.hidden, inputs)
+    h = RBMs.mean_from_inputs(rbm.hidden, inputs)
     ∂v = RBMs.∂energy(rbm.visible, stats)
     ∂h = RBMs.∂free_energy(rbm.hidden, inputs; wts)
     ∂w = RBMs.∂interaction_energy(rbm, v, h; wts)
