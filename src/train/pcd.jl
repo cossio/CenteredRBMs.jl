@@ -48,7 +48,7 @@ function ∂contrastive_divergence_and_center!(
     # extract moment estimates from the gradients
     offset_h_new = grad2mean(rbm.hidden, ∂d.hidden)  # <h>_d from minibatch
     # since <h>_d uses minibatches, we keep a running average
-    offset_h = hidden_offset_damping * rbm.offset_h + (1 - hidden_offset_damping) * offset_h_new
+    offset_h = (1 - hidden_offset_damping) * rbm.offset_h + hidden_offset_damping * offset_h_new
     center_hidden!(rbm, offset_h)
     return ∂
 end
