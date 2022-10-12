@@ -15,14 +15,14 @@ end
 @testset "shift_fields!" begin
     N = (3, 4)
     layers = (
-        RBMs.Binary(randn(N...)),
-        RBMs.Spin(randn(N...)),
-        RBMs.Potts(randn(N...)),
-        RBMs.Gaussian(randn(N...), rand(N...)),
-        RBMs.ReLU(randn(N...), rand(N...)),
-        RBMs.dReLU(randn(N...), randn(N...), rand(N...), rand(N...)),
-        RBMs.pReLU(randn(N...), rand(N...), randn(N...), rand(N...) .- 0.5),
-        RBMs.xReLU(randn(N...), rand(N...), randn(N...), randn(N...)),
+        RBMs.Binary(; θ = randn(N...)),
+        RBMs.Spin(; θ = randn(N...)),
+        RBMs.Potts(; θ = randn(N...)),
+        RBMs.Gaussian(; θ = randn(N...), γ = rand(N...)),
+        RBMs.ReLU(; θ = randn(N...), γ = rand(N...)),
+        RBMs.dReLU(; θp = randn(N...), θn = randn(N...), γp = rand(N...), γn = rand(N...)),
+        RBMs.pReLU(; θ = randn(N...), γ = rand(N...), Δ = randn(N...), η = rand(N...) .- 0.5),
+        RBMs.xReLU(; θ = randn(N...), γ = rand(N...), Δ = randn(N...), ξ = randn(N...)),
     )
     for layer in layers
         offset = randn(size(layer)...)

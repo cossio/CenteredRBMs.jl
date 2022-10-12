@@ -1,37 +1,35 @@
 function RBMs.sample_h_from_v(rbm::CenteredRBM, v::AbstractArray)
-    inputs = RBMs.inputs_v_to_h(rbm, v)
-    return RBMs.sample_from_inputs(rbm.hidden, inputs)
+    inputs = inputs_h_from_v(rbm, v)
+    return sample_from_inputs(rbm.hidden, inputs)
 end
 
 function RBMs.sample_v_from_h(rbm::CenteredRBM, h::AbstractArray)
-    inputs = RBMs.inputs_h_to_v(rbm, h)
-    return RBMs.sample_from_inputs(rbm.visible, inputs)
+    inputs = inputs_v_from_h(rbm, h)
+    return sample_from_inputs(rbm.visible, inputs)
 end
 
 function RBMs.sample_v_from_v(rbm::CenteredRBM, v::AbstractArray; steps::Int = 1)
-    @assert size(rbm.visible) == size(v)[1:ndims(rbm.visible)]
     for _ in 1:steps
-        v = oftype(v, RBMs.sample_v_from_v_once(rbm, v))
+        v = oftype(v, sample_v_from_v_once(rbm, v))
     end
     return v
 end
 
 function RBMs.sample_h_from_h(rbm::CenteredRBM, h::AbstractArray; steps::Int = 1)
-    @assert size(rbm.hidden) == size(h)[1:ndims(rbm.hidden)]
     for _ in 1:steps
-        h = oftype(h, RBMs.sample_h_from_h_once(rbm, h))
+        h = oftype(h, sample_h_from_h_once(rbm, h))
     end
     return h
 end
 
 function RBMs.sample_v_from_v_once(rbm::CenteredRBM, v::AbstractArray)
-    h = RBMs.sample_h_from_v(rbm, v)
-    v = RBMs.sample_v_from_h(rbm, h)
+    h = sample_h_from_v(rbm, v)
+    v = sample_v_from_h(rbm, h)
     return v
 end
 
 function RBMs.sample_h_from_h_once(rbm::CenteredRBM, h::AbstractArray)
-    v = RBMs.sample_v_from_h(rbm, h)
-    h = RBMs.sample_h_from_v(rbm, v)
+    v = sample_v_from_h(rbm, h)
+    h = sample_h_from_v(rbm, v)
     return h
 end
