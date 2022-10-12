@@ -10,11 +10,13 @@ import CairoMakie
 using Random: bitrand
 using Statistics: mean
 import MLDatasets
-import Flux
-import RestrictedBoltzmannMachines as RBMs
+using Flux: Adam
 using ValueHistories: MVHistory
+import RestrictedBoltzmannMachines as RBMs
+using RestrictedBoltzmannMachines: BinaryRBM, log_pseudolikelihood, initialize!,
+    sample_v_from_v
 import CenteredRBMs
-using RestrictedBoltzmannMachines: BinaryRBM
+using CenteredRBMs: pcd!, center, uncenter
 nothing #hide
 
 #=
@@ -30,7 +32,9 @@ a matrix of size `(width * ncols, height * nrows)`, that can be plotted in a hea
 to display all images.
 """
 function imggrid(A::AbstractArray{<:Any,4})
-    reshape(permutedims(A, (1,3,2,4)), size(A,1)*size(A,3), size(A,2)*size(A,4))
+    width, height, ncols, nrows = size(A)
+    At = permutedims(A, (1, 3, 2, 4))
+    return reshape(At, width * ncols, height * nrows)
 end
 
 #=
@@ -47,20 +51,20 @@ nothing #hide
 Initialize and train a centered RBM
 =#
 
-rbm_c = CenteredRBMs.center(BinaryRBM(Float, (28,28), 400))
-RBMs.initialize!(rbm_c, train_x) # centers from data
+rbm_c = center(BinaryRBM(Float, (28, 28), 400))
+initialize!(rbm_c, train_x) # centers from data
 batchsize = 256
-optim = Flux.ADAM()
+optim = Adam()
 vm = bitrand(28, 28, batchsize) # fantasy chains
 history_c = MVHistory()
-push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
+push!(history_c, :lpl, mean(log_pseudolikelihood(rbm_c, train_x)))
 push!(history_c, :Δt, 0.0)
 @time for epoch in 1:100 # track pseudolikelihood every 5 epochs
-    Δt = @elapsed RBMs.pcd!(rbm_c, train_x; epochs=5, vm, batchsize, optim)
-    push!(history_c, :lpl, mean(RBMs.log_pseudolikelihood(rbm_c, train_x)))
+    Δt = @elapsed pcd!(rbm_c, train_x; epochs=5, vm, batchsize, optim)
+    push!(history_c, :lpl, mean(log_pseudolikelihood(rbm_c, train_x)))
     push!(history_c, :Δt, Δt)
 end
-rbm_c = CenteredRBMs.uncenter(rbm_c) # convert to equivalent RBM (without offsets)
+rbm_c = uncenter(rbm_c) # convert to equivalent RBM (without offsets)
 nothing #hide
 
 #=
@@ -68,14 +72,14 @@ For comparison, we also train a normal (uncentered) RBM.
 =#
 
 rbm_u = BinaryRBM(Float, (28,28), 400)
-RBMs.initialize!(rbm_u, train_x)
+initialize!(rbm_u, train_x)
 vm = bitrand(28, 28, batchsize)
 history_u = MVHistory()
-push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
+push!(history_u, :lpl, mean(log_pseudolikelihood(rbm_u, train_x)))
 push!(history_u, :Δt, 0.0)
 @time for epoch in 1:100 # track pseudolikelihood every 5 epochs
     Δt = @elapsed RBMs.pcd!(rbm_u, train_x; epochs=5, vm, batchsize, optim, center=false)
-    push!(history_u, :lpl, mean(RBMs.log_pseudolikelihood(rbm_u, train_x)))
+    push!(history_u, :lpl, mean(log_pseudolikelihood(rbm_u, train_x)))
     push!(history_u, :Δt, Δt)
 end
 nothing #hide
@@ -110,8 +114,8 @@ fig
 # Now we do the Gibbs sampling to generate RBM digits.
 
 nrows, ncols = 10, 15
-@time fantasy_x_c = RBMs.sample_v_from_v(rbm_c, bitrand(28,28,nrows*ncols); steps=10000)
-@time fantasy_x_u = RBMs.sample_v_from_v(rbm_u, bitrand(28,28,nrows*ncols); steps=10000)
+@time fantasy_x_c = sample_v_from_v(rbm_c, bitrand(28, 28, nrows * ncols); steps=10000)
+@time fantasy_x_u = sample_v_from_v(rbm_u, bitrand(28, 28, nrows * ncols); steps=10000)
 nothing #hide
 
 # Plot the resulting samples.
