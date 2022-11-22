@@ -3,9 +3,9 @@ function pcd!(
     data::AbstractArray;
 
     batchsize::Int = 1,
-    epochs::Int = 1,
+    iters::Int = 1,
 
-    optim::AbstractRule = Adam(),
+    optim::AbstractRule = Adam(), # a rule from Optimisers
     steps::Int = 1, # Monte-Carlo steps to update persistent chains
 
     # data point weights
@@ -27,37 +27,32 @@ function pcd!(
     # inital centering from data
     center_from_data!(rbm, data)
 
+    # define parameters for Optimiser
     ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w)
     state = setup(optim, ps)
 
-    for epoch in 1:epochs
-        batches = minibatches(data, wts; batchsize)
-        for (batch_idx, (vd, wd)) in enumerate(batches)
-            # update fantasy chains
-            vm .= sample_v_from_v(rbm, vm; steps)
+    for (iter, (vd, wd)) in zip(1:iters, infinite_minibatches(data, wts; batchsize))
+        # update fantasy chains
+        vm .= sample_v_from_v(rbm, vm; steps)
 
-            # compute gradient
-            ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
-            ∂m = ∂free_energy(rbm, vm)
-            ∂ = ∂d - ∂m
+        # compute gradient
+        ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
+        ∂m = ∂free_energy(rbm, vm)
+        ∂ = ∂d - ∂m
 
-            # feed gradient to Optimiser rule
-            gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
-            state, ps = update!(state, ps, gs)
+        # feed gradient to Optimiser rule
+        gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
+        state, ps = update!(state, ps, gs)
 
-            # centering
-            offset_h_new = grad2ave(rbm.hidden, ∂d.hidden) # <h>_d from minibatch
-            offset_h = (1 - hidden_offset_damping) * rbm.offset_h + hidden_offset_damping * offset_h_new
-            center_hidden!(rbm, offset_h)
+        # centering
+        offset_h_new = grad2ave(rbm.hidden, -∂d.hidden) # <h>_d from minibatch
+        offset_h = (1 - hidden_offset_damping) * rbm.offset_h + hidden_offset_damping * offset_h_new
+        center_hidden!(rbm, offset_h)
 
-            callback(; rbm, optim, epoch, batch_idx, vm, vd, wd)
-        end
+        callback(; rbm, optim, iter, vm, vd, wd)
 
-        # full center after ending each epoch
-        center_from_data!(rbm, data)
+        # # full center after ending each epoch
+        # center_from_data!(rbm, data)
     end
-    return rbm
+    return rbm, state
 end
-
-RBMs.update!(rbm::CenteredRBM, ∂::∂RBM) = RBMs.update!(RBM(rbm), ∂)
-RBMs.update!(∂::∂RBM, rbm::CenteredRBM, optim) = RBMs.update!(∂, RBM(rbm), optim)
