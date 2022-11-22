@@ -7,8 +7,15 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/cossio/CenteredRBMs.jl)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/cossio/CenteredRBMs.jl)
 
-Train and sample centered [Restricted Boltzmann machines](https://en.wikipedia.org/wiki/Restricted_Boltzmann_machine) in Julia.
-See <http://jmlr.org/papers/v17/14-237.html> for the definition of *centered*.
+Train and sample centered Restricted Boltzmann machines in Julia. See Melchior et al for the definition of *centered*.
+
+We consider an RBM with binary units. Then the centered variant has energy defined by:
+
+$$
+E(v,h) = -\sum_i a_i v_i - \sum_\mu b_\mu h_\mu - \sum_{i\mu} w_{i\mu} (v_i - c_i) (h_\mu - d_\mu)
+$$
+
+with offset parameters $c_i,d_\mu$. Typically $c_i,d_\mu$ are set to approximate the average activities of $v_i$ and $h_\mu$, respectively, as this seems to help training (see Montavon et al).
 
 ## Installation
 
@@ -16,7 +23,7 @@ This package is not registered.
 Install with:
 
 ```julia
-using Pkg
+import Pkg
 Pkg.add(url="https://github.com/cossio/CenteredRBMs.jl")
 ```
 
@@ -24,4 +31,10 @@ This package does not export any symbols.
 
 ## Related
 
-Builds upon the [RestrictedBoltzmannMachines](https://github.com/cossio/RestrictedBoltzmannMachines.jl) Julia package, which defines the `RBM` and layer types.
+[RestrictedBoltzmannMachines](https://github.com/cossio/RestrictedBoltzmannMachines.jl) Julia package, which defines the `RBM` and layer types.
+
+## References
+
+Montavon, Grégoire, and Klaus-Robert Müller. "Deep Boltzmann machines and the centering trick." Neural networks: tricks of the trade. Springer, Berlin, Heidelberg, 2012. 621-637.
+
+Melchior, Jan, Asja Fischer, and Laurenz Wiskott. "How to center deep Boltzmann machines." The Journal of Machine Learning Research 17.1 (2016): 3387-3447.

@@ -5,8 +5,7 @@ using LinearAlgebra: norm
 import RestrictedBoltzmannMachines as RBMs
 import CenteredRBMs
 using CenteredRBMs: center, uncenter, pcd!
-using RestrictedBoltzmannMachines: initialize!, mean_h_from_v, inputs_v_to_h,
-    BinaryRBM
+using RestrictedBoltzmannMachines: initialize!, mean_h_from_v, inputs_h_from_v, BinaryRBM
 
 @testset "pcd" begin
     rbm = center(BinaryRBM((28,28), 100))
@@ -16,7 +15,7 @@ using RestrictedBoltzmannMachines: initialize!, mean_h_from_v, inputs_v_to_h,
     @test rbm.offset_v ≈ dropdims(mean(train_x; dims=3); dims=3)
     train_h = mean_h_from_v(rbm, train_x)
     @test rbm.offset_h ≈ vec(mean(train_h; dims=2))
-    @test norm(mean(inputs_v_to_h(rbm, train_x); dims=2)) < 1e-6
+    @test norm(mean(inputs_h_from_v(rbm, train_x); dims=2)) < 1e-6
 
     pcd!(rbm, train_x; batchsize=128)
     @test rbm.offset_v ≈ dropdims(mean(train_x; dims=3); dims=3)
