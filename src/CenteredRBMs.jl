@@ -1,7 +1,7 @@
 module CenteredRBMs
     import Random
     import Statistics
-    using Flux: Adam
+    using Optimisers: AbstractRule, setup, update!, Adam
     using FillArrays: Zeros
     import RestrictedBoltzmannMachines as RBMs
     using RestrictedBoltzmannMachines: RBM, AbstractLayer,
@@ -10,7 +10,7 @@ module CenteredRBMs
         sample_v_from_v, sample_v_from_h, sample_h_from_v,
         energy, interaction_energy, cgf, moments_from_samples,
         inputs_h_from_v, inputs_v_from_h, mean_from_inputs,
-        ∂free_energy, ∂cgfs, ∂energy_from_moments, update!, ∂RBM, ∂interaction_energy,
+        ∂free_energy, ∂cgfs, ∂energy_from_moments, ∂RBM, ∂interaction_energy,
         BinaryRBM, minibatches, grad2ave, wmean, log_pseudolikelihood
 
     include("centered_rbm.jl")
