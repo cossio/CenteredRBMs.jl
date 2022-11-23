@@ -3,6 +3,7 @@ module CenteredRBMs
     import Statistics
     using Optimisers: AbstractRule, setup, update!, Adam
     using FillArrays: Zeros
+    using EllipsisNotation: (..)
     import RestrictedBoltzmannMachines as RBMs
     using RestrictedBoltzmannMachines: RBM, AbstractLayer,
         Binary, Spin, Potts, Gaussian, ReLU, dReLU, pReLU, xReLU,
@@ -11,12 +12,13 @@ module CenteredRBMs
         energy, interaction_energy, cgf, moments_from_samples,
         inputs_h_from_v, inputs_v_from_h, mean_from_inputs,
         ∂free_energy, ∂cgfs, ∂energy_from_moments, ∂RBM, ∂interaction_energy,
-        BinaryRBM, infinite_minibatches, grad2ave, wmean, log_pseudolikelihood
+        BinaryRBM, infinite_minibatches, wmean, log_pseudolikelihood
 
     include("centered_rbm.jl")
     include("centering.jl")
     include("binary.jl")
     include("layers.jl")
+    include("from_grad.jl")
     include("sampling.jl")
     include("train/pcd.jl")
     include("train/initialization.jl")
