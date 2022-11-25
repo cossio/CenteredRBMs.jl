@@ -40,8 +40,8 @@ end
 Creates a centered RBM, with offsets initialized to zero.
 """
 function CenteredRBM(visible::AbstractLayer, hidden::AbstractLayer, w::AbstractArray)
-    offset_v = zeros(eltype(w), size(visible))
-    offset_h = zeros(eltype(w), size(hidden))
+    offset_v = similar(w, size(visible)) .= 0
+    offset_h = similar(w, size(hidden)).= 0
     return CenteredRBM(RBM(visible, hidden, w), offset_v, offset_h)
 end
 
