@@ -2,7 +2,7 @@ module CenteredRBMs
     import Random
     import Statistics
     using Optimisers: AbstractRule, setup, update!, Adam
-    using FillArrays: Zeros
+    using FillArrays: Zeros, Falses
     using EllipsisNotation: (..)
     using CudaRBMs: gpu, cpu
     import CudaRBMs

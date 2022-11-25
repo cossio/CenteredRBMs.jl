@@ -12,7 +12,7 @@ function pcd!(
     wts::Union{AbstractVector, Nothing} = nothing,
 
     # init fantasy chains
-    vm = sample_from_inputs(rbm.visible, falses(size(rbm.visible)..., batchsize)),
+    vm = sample_from_inputs(rbm.visible, Falses(size(rbm.visible)..., batchsize)),
 
     moments = moments_from_samples(rbm.visible, data; wts),
 
