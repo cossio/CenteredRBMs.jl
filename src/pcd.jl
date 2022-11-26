@@ -75,7 +75,6 @@ function RestrictedBoltzmannMachines.pcd!(
         zerosum && zerosum!(rbm)
         rescale && rescale_weights!(rbm)
 
-
         callback(; rbm, optim, iter, vm, vd, wd)
     end
     return state, ps
