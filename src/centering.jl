@@ -82,13 +82,13 @@ function center_hidden!(rbm::CenteredRBM, offset_h::AbstractArray)
 end
 
 function center_visible_from_data!(rbm::CenteredRBM, data::AbstractArray; wts=nothing)
-    offset_v = RBMs.batchmean(rbm.visible, data; wts)
+    offset_v = batchmean(rbm.visible, data; wts)
     return center_visible!(rbm, offset_v)
 end
 
 function center_hidden_from_data!(rbm::CenteredRBM, data::AbstractArray; wts=nothing)
-    h = RBMs.mean_h_from_v(rbm, data)
-    offset_h = RBMs.batchmean(rbm.hidden, h; wts)
+    h = mean_h_from_v(rbm, data)
+    offset_h = batchmean(rbm.hidden, h; wts)
     return center_hidden!(rbm, offset_h)
 end
 

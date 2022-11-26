@@ -11,9 +11,9 @@ function CenteredBinaryRBM(
     a::AbstractArray, b::AbstractArray, w::AbstractArray,
     offset_v::AbstractArray, offset_h::AbstractArray
 )
-    return CenteredRBM(RBMs.BinaryRBM(a, b, w), offset_v, offset_h)
+    return CenteredRBM(BinaryRBM(a, b, w), offset_v, offset_h)
 end
 
 function CenteredBinaryRBM(a::AbstractArray, b::AbstractArray, w::AbstractArray)
-    return CenteredRBM(RBMs.BinaryRBM(a, b, w))
+    return CenteredRBM(BinaryRBM(a, b, w))
 end

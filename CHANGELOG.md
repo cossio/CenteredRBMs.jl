@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## [v2.0.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.1.0)
+
+- BREAKING: `pcd!` is now a method of `RestrictedBoltzmannMachines.pcd!` (instead of introducing a new function in this package).
+
 ## [v1.1.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.1.0)
 
 - Introduce the CUDA helper functions: `cpu`, `gpu`, to transfer a model between devices.

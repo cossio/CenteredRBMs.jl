@@ -1,7 +1,7 @@
 name = "CenteredRBMs"
 uuid = "def70c09-f69f-4396-afd1-e8507a6dddbf"
 authors = ["Jorge Fernandez-de-Cossio-Diaz <j.cossio.diaz@gmail.com>"]
-version = "1.1.0"
+version = "2.0.0"
 
 [deps]
 CudaRBMs = "4e7460e3-fd1b-4f88-90fa-49c1b80b3e77"

@@ -56,32 +56,34 @@ To construct an equivalent model, use the function
 `uncenter(centered_rbm)` instead (see [`uncenter`](@ref)).
 Shares parameters with `centered_rbm`.
 """
-RBMs.RBM(rbm::CenteredRBM) = RBM(rbm.visible, rbm.hidden, rbm.w)
+function RestrictedBoltzmannMachines.RBM(rbm::CenteredRBM)
+    return RBM(rbm.visible, rbm.hidden, rbm.w)
+end
 
-function RBMs.energy(rbm::CenteredRBM, v::AbstractArray, h::AbstractArray)
+function RestrictedBoltzmannMachines.energy(rbm::CenteredRBM, v::AbstractArray, h::AbstractArray)
     Ev = energy(rbm.visible, v)
     Eh = energy(rbm.hidden, h)
     Ew = interaction_energy(rbm, v, h)
     return Ev .+ Eh .+ Ew
 end
 
-function RBMs.interaction_energy(centered_rbm::CenteredRBM, v::AbstractArray, h::AbstractArray)
+function RestrictedBoltzmannMachines.interaction_energy(centered_rbm::CenteredRBM, v::AbstractArray, h::AbstractArray)
     centered_v = v .- centered_rbm.offset_v
     centered_h = h .- centered_rbm.offset_h
     return interaction_energy(RBM(centered_rbm), centered_v, centered_h)
 end
 
-function RBMs.inputs_h_from_v(centered_rbm::CenteredRBM, v::AbstractArray)
+function RestrictedBoltzmannMachines.inputs_h_from_v(centered_rbm::CenteredRBM, v::AbstractArray)
     centered_v = v .- centered_rbm.offset_v
     return inputs_h_from_v(RBM(centered_rbm), centered_v)
 end
 
-function RBMs.inputs_v_from_h(centered_rbm::CenteredRBM, h::AbstractArray)
+function RestrictedBoltzmannMachines.inputs_v_from_h(centered_rbm::CenteredRBM, h::AbstractArray)
     centered_h = h .- centered_rbm.offset_h
     return inputs_v_from_h(RBM(centered_rbm), centered_h)
 end
 
-function RBMs.free_energy(rbm::CenteredRBM, v::AbstractArray)
+function RestrictedBoltzmannMachines.free_energy(rbm::CenteredRBM, v::AbstractArray)
     E = energy(rbm.visible, v)
     inputs = inputs_h_from_v(rbm, v)
     F = -cgf(rbm.hidden, inputs)
@@ -89,17 +91,17 @@ function RBMs.free_energy(rbm::CenteredRBM, v::AbstractArray)
     return E + F - ΔE
 end
 
-function RBMs.mean_h_from_v(rbm::CenteredRBM, v::AbstractArray)
+function RestrictedBoltzmannMachines.mean_h_from_v(rbm::CenteredRBM, v::AbstractArray)
     inputs = inputs_h_from_v(rbm, v)
     return mean_from_inputs(rbm.hidden, inputs)
 end
 
-function RBMs.mean_v_from_h(rbm::CenteredRBM, h::AbstractArray)
+function RestrictedBoltzmannMachines.mean_v_from_h(rbm::CenteredRBM, h::AbstractArray)
     inputs = inputs_v_from_h(rbm, h)
     return mean_from_inputs(rbm.visible, inputs)
 end
 
-function RBMs.∂free_energy(
+function RestrictedBoltzmannMachines.∂free_energy(
     rbm::CenteredRBM, v::AbstractArray; wts = nothing,
     moments = moments_from_samples(rbm.visible, v; wts)
 )
@@ -116,7 +118,7 @@ function RBMs.∂free_energy(
     return ∂RBM(∂v, ∂h, ∂w)
 end
 
-function RBMs.∂interaction_energy(
+function RestrictedBoltzmannMachines.∂interaction_energy(
     rbm::CenteredRBM, v::AbstractArray, h::AbstractArray; wts = nothing
 )
     centered_v = v .- rbm.offset_v
@@ -125,4 +127,6 @@ function RBMs.∂interaction_energy(
     return ∂w
 end
 
-RBMs.log_pseudolikelihood(rbm::CenteredRBM, v::AbstractArray) = log_pseudolikelihood(uncenter(rbm), v)
+function RestrictedBoltzmannMachines.log_pseudolikelihood(rbm::CenteredRBM, v::AbstractArray)
+    return log_pseudolikelihood(uncenter(rbm), v)
+end

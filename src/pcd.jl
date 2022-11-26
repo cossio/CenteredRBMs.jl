@@ -1,4 +1,4 @@
-function pcd!(
+function RestrictedBoltzmannMachines.pcd!(
     rbm::CenteredRBM,
     data::AbstractArray;
 
