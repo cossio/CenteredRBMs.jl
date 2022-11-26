@@ -17,7 +17,7 @@ function pcd!(
     moments = moments_from_samples(rbm.visible, data; wts),
 
     # damping to update hidden statistics
-    hidden_offset_damping::Real = 0.01,
+    hidden_offset_damping::Real = 1//100,
 
     callback = Returns(nothing)
 )
