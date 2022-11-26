@@ -25,5 +25,6 @@ module CenteredRBMs
     include("sampling.jl")
     include("pcd.jl")
     include("initialization.jl")
+    include("gauge.jl")
     include("gpu.jl")
 end
