@@ -22,7 +22,7 @@ module CenteredRBMs
     include("layers.jl")
     include("from_grad.jl")
     include("sampling.jl")
-    include("train/pcd.jl")
-    include("train/initialization.jl")
+    include("pcd.jl")
+    include("initialization.jl")
     #include("gpu.jl")
 end
