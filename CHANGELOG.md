@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file. The format 
 ## [v2.0.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.1.0)
 
 - BREAKING: `pcd!` is now a method of `RestrictedBoltzmannMachines.pcd!` (instead of introducing a new function in this package).
+- Add regularization (options `l2_fields, l1_weights, ...` to `pcd!`).
+- Gauge fix (`zerosum`, `rescale` weights).
 
 ## [v1.1.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.1.0)
 

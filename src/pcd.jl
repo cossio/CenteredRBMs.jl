@@ -19,6 +19,16 @@ function RestrictedBoltzmannMachines.pcd!(
     # damping to update hidden statistics
     hidden_offset_damping::Real = 1//100,
 
+    # regularization
+    l2_fields::Real = 0, # visible fields L2 regularization
+    l1_weights::Real = 0, # weights L1 regularization
+    l2_weights::Real = 0, # weights L2 regularization
+    l2l1_weights::Real = 0, # weights L2/L1 regularization
+
+    # gauge
+    zerosum::Bool = true, # zerosum gauge for Potts layers
+    rescale::Bool = true, # normalize weights to unit norm (for continuous hidden units only)
+
     callback = Returns(nothing)
 )
     @assert size(data) == (size(rbm.visible)..., size(data)[end])
@@ -26,6 +36,10 @@ function RestrictedBoltzmannMachines.pcd!(
 
     # inital centering from data
     center_from_data!(rbm, data)
+
+    # gauge constraints
+    zerosum && zerosum!(rbm)
+    rescale && rescale_weights!(rbm)
 
     # define parameters for Optimiser
     ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w)
@@ -40,6 +54,9 @@ function RestrictedBoltzmannMachines.pcd!(
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
 
+        # weight decay
+        ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
+
         # feed gradient to Optimiser rule
         gs = (; visible = ∂.visible, hidden = ∂.hidden, w = ∂.w)
         state, ps = update!(state, ps, gs)
@@ -49,10 +66,12 @@ function RestrictedBoltzmannMachines.pcd!(
         offset_h = (1 - hidden_offset_damping) * rbm.offset_h + hidden_offset_damping * offset_h_new
         center_hidden!(rbm, offset_h)
 
-        callback(; rbm, optim, iter, vm, vd, wd)
+        # gauge constraints
+        zerosum && zerosum!(rbm)
+        rescale && rescale_weights!(rbm)
 
-        # # full center after ending each epoch
-        # center_from_data!(rbm, data)
+
+        callback(; rbm, optim, iter, vm, vd, wd)
     end
-    return rbm, state
+    return state, ps
 end

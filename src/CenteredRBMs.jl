@@ -14,7 +14,8 @@ module CenteredRBMs
         energy, interaction_energy, cgf, moments_from_samples,
         inputs_h_from_v, inputs_v_from_h, mean_from_inputs, mean_h_from_v,
         ∂free_energy, ∂cgfs, ∂energy_from_moments, ∂RBM, ∂interaction_energy,
-        BinaryRBM, infinite_minibatches, wmean, log_pseudolikelihood, batchmean
+        BinaryRBM, infinite_minibatches, wmean, log_pseudolikelihood, batchmean,
+        ∂regularize!, zerosum!, rescale_weights!
 
     include("centered_rbm.jl")
     include("centering.jl")
