@@ -5,7 +5,7 @@ module CenteredRBMs
     using FillArrays: Zeros, Falses
     using EllipsisNotation: (..)
     #using CudaRBMs: gpu, cpu
-    import CudaRBMs
+    #import CudaRBMs
     import RestrictedBoltzmannMachines as RBMs
     using RestrictedBoltzmannMachines: RBM, AbstractLayer,
         Binary, Spin, Potts, Gaussian, ReLU, dReLU, pReLU, xReLU,
