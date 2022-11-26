@@ -45,6 +45,8 @@ function RestrictedBoltzmannMachines.pcd!(
     ps = (; visible = rbm.visible.par, hidden = rbm.hidden.par, w = rbm.w)
     state = setup(optim, ps)
 
+    wts_mean = isnothing(wts) ? 1 : mean(wts)
+
     for (iter, (vd, wd)) in zip(1:iters, infinite_minibatches(data, wts; batchsize))
         # update fantasy chains
         vm .= sample_v_from_v(rbm, vm; steps)
@@ -53,6 +55,9 @@ function RestrictedBoltzmannMachines.pcd!(
         ∂d = ∂free_energy(rbm, vd; wts = wd, moments)
         ∂m = ∂free_energy(rbm, vm)
         ∂ = ∂d - ∂m
+
+        batch_weight = isnothing(wts) ? 1 : mean(wd) / wts_mean
+        ∂ *= batch_weight
 
         # weight decay
         ∂regularize!(∂, rbm; l2_fields, l1_weights, l2_weights, l2l1_weights)
