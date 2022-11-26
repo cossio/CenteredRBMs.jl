@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## [v1.1.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.1.0)
+
+- Introduce the CUDA helper functions: `cpu`, `gpu`, to transfer a model between devices.
+
 ## [v1.0.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.0.0)
 
 - This CHANGELOG file.

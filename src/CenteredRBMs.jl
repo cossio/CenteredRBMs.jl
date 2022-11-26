@@ -4,8 +4,8 @@ module CenteredRBMs
     using Optimisers: AbstractRule, setup, update!, Adam
     using FillArrays: Zeros, Falses
     using EllipsisNotation: (..)
-    #using CudaRBMs: gpu, cpu
-    #import CudaRBMs
+    using CudaRBMs: gpu, cpu
+    import CudaRBMs
     import RestrictedBoltzmannMachines as RBMs
     using RestrictedBoltzmannMachines: RBM, AbstractLayer,
         Binary, Spin, Potts, Gaussian, ReLU, dReLU, pReLU, xReLU,
@@ -24,5 +24,5 @@ module CenteredRBMs
     include("sampling.jl")
     include("pcd.jl")
     include("initialization.jl")
-    #include("gpu.jl")
+    include("gpu.jl")
 end
