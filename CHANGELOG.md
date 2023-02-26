@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 ## v2.1.0
 
 - mirror for centered RBMs
+- fantasy chains are overwriten in `pcd!`
 
 ## [v2.0.0](https://github.com/cossio/CenteredRBMs.jl/releases/tag/v1.1.0)
 
