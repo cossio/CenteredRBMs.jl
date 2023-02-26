@@ -4,7 +4,7 @@ using Statistics: mean
 using Zygote: gradient
 using CenteredRBMs: CenteredBinaryRBM, center, uncenter
 using RestrictedBoltzmannMachines: BinaryRBM, energy, free_energy, interaction_energy,
-    inputs_v_from_h, inputs_h_from_v, mean_h_from_v, mean_v_from_h, ∂free_energy
+    inputs_v_from_h, inputs_h_from_v, mean_h_from_v, mean_v_from_h, ∂free_energy, mirror
 
 @testset "CenteredBinaryRBM" begin
     rbm = @inferred CenteredBinaryRBM(randn(5), randn(3), randn(5, 3), randn(5), randn(3))
@@ -60,4 +60,16 @@ end
     @test ∂.visible ≈ only(gs).visible.par
     @test ∂.hidden ≈ only(gs).hidden.par
     @test ∂.w ≈ only(gs).w
+end
+
+@testset "mirror" begin
+    rbm = CenteredBinaryRBM(randn(5,2), randn(7,4,3), randn(5,2,7,4,3), randn(5,2), randn(7,4,3))
+    rbm_mirror = @inferred mirror(rbm)
+    @test rbm_mirror.visible == rbm.hidden
+    @test rbm_mirror.hidden == rbm.visible
+    @test rbm_mirror.offset_v == rbm.offset_h
+    @test rbm_mirror.offset_h == rbm.offset_v
+    v = rand(Bool, size(rbm.visible)..., 13)
+    h = rand(Bool, size(rbm.hidden)..., 13)
+    @test energy(rbm_mirror, h, v) ≈ energy(rbm_mirror, v, h)
 end

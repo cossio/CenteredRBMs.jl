@@ -130,3 +130,15 @@ end
 function RestrictedBoltzmannMachines.log_pseudolikelihood(rbm::CenteredRBM, v::AbstractArray)
     return log_pseudolikelihood(uncenter(rbm), v)
 end
+
+function RestrictedBoltzmannMachines.mirror(rbm::CenteredRBM)
+    perm = ntuple(Val(ndims(rbm.w))) do i
+        if i ≤ ndims(rbm.hidden)
+            i + ndims(rbm.visible)
+        else
+            i - ndims(rbm.hidden)
+        end
+    end
+    w = permutedims(rbm.w, perm)
+    return CenteredRBM(rbm.hidden, rbm.visible, w, rbm.offset_h, rbm.offset_v)
+end
