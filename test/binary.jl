@@ -71,5 +71,5 @@ end
     @test rbm_mirror.offset_h == rbm.offset_v
     v = rand(Bool, size(rbm.visible)..., 13)
     h = rand(Bool, size(rbm.hidden)..., 13)
-    @test energy(rbm_mirror, h, v) ≈ energy(rbm_mirror, v, h)
+    @test energy(rbm_mirror, h, v) ≈ energy(rbm, v, h)
 end
