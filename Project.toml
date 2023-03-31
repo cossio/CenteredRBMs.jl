@@ -1,7 +1,7 @@
 name = "CenteredRBMs"
 uuid = "def70c09-f69f-4396-afd1-e8507a6dddbf"
 authors = ["Jorge Fernandez-de-Cossio-Diaz <j.cossio.diaz@gmail.com>"]
-version = "2.1.0"
+version = "2.2.0-DEV"
 
 [deps]
 CudaRBMs = "4e7460e3-fd1b-4f88-90fa-49c1b80b3e77"
@@ -16,7 +16,7 @@ ValueHistories = "98cad3c8-aec3-5f06-8e41-884608649ab7"
 
 [compat]
 EllipsisNotation = "1"
-FillArrays = "0.13"
+FillArrays = "0.13, 1"
 Optimisers = "0.2"
 RestrictedBoltzmannMachines = "1, 2"
 ValueHistories = "0.5"
