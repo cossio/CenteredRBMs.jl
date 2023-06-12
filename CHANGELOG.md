@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## v3.0.0
+
+- Move CUDA methods to `CudaRBMs.jl` package.
+
 ## v2.2.0
 
 - Compat with RBMs v3.
