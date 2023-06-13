@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## v4.0.0
+
+- Use `shift_fields` from `RBMs.jl`, and remove it here.
+
 ## v3.0.0
 
 - Move CUDA methods to `CudaRBMs.jl` package.
