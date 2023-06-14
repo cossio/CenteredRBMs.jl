@@ -1,7 +1,7 @@
 name = "CenteredRBMs"
 uuid = "def70c09-f69f-4396-afd1-e8507a6dddbf"
 authors = ["Jorge Fernandez-de-Cossio-Diaz <j.cossio.diaz@gmail.com>"]
-version = "4.0.0"
+version = "4.0.1"
 
 [deps]
 EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
