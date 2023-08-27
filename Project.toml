@@ -1,7 +1,7 @@
 name = "CenteredRBMs"
 uuid = "def70c09-f69f-4396-afd1-e8507a6dddbf"
 authors = ["Jorge Fernandez-de-Cossio-Diaz <j.cossio.diaz@gmail.com>"]
-version = "4.0.3-DEV"
+version = "4.0.3"
 
 [deps]
 EllipsisNotation = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
@@ -15,6 +15,6 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 [compat]
 EllipsisNotation = "1"
 FillArrays = "0.13, 1"
-Optimisers = "0.2"
+Optimisers = "0.2, 0.3"
 RestrictedBoltzmannMachines = "1, 2, 3"
 julia = "1.8"
