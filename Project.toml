@@ -13,8 +13,9 @@ RestrictedBoltzmannMachines = "12e6b396-7db5-4506-8cb6-664a4fe1e50e"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-EllipsisNotation = "1"
-FillArrays = "0.13, 1"
+EllipsisNotation = "1.8.0"
+FillArrays = "0.13, 1.0.0"
 Optimisers = "0.2, 0.3, 0.4.0"
-RestrictedBoltzmannMachines = "1, 2, 3"
-julia = "1.8"
+RestrictedBoltzmannMachines = "1, 2, 3.4.2"
+Statistics = "1.11.1"
+julia = "1.11.1"
