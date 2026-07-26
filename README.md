@@ -1,10 +1,7 @@
 # CenteredRBMs Julia package
 
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/cossio/CenteredRBMs.jl/blob/master/LICENSE.md)
-![](https://github.com/cossio/CenteredRBMs.jl/workflows/CI/badge.svg)
-[![codecov](https://codecov.io/gh/cossio/CenteredRBMs.jl/branch/master/graph/badge.svg?token=90I3AJIZIG)](https://codecov.io/gh/cossio/CenteredRBMs.jl)
-![GitHub repo size](https://img.shields.io/github/repo-size/cossio/CenteredRBMs.jl)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/cossio/CenteredRBMs.jl)
+> [!WARNING]
+> This package is deprecated. Its functionality has been incorporated in the [`RestrictedBoltzmannMachines`](https://github.com/cossio/RestrictedBoltzmannMachines.jl) package.
 
 Train and sample centered Restricted Boltzmann machines in Julia. See [Melchior et al] for the definition of *centered*. Consider an RBM with binary units. Then the centered variant has energy defined by:
 
